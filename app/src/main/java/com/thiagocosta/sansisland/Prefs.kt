@@ -51,6 +51,11 @@ object Prefs {
         get() = prefs.getBoolean("skip_foreground", true)
         set(v) = prefs.edit().putBoolean("skip_foreground", v).apply()
 
+    /** "siri" (multicolor glow), "accent" (glow in the app color) or "classic" (plain black) */
+    var islandStyle: String
+        get() = prefs.getString("style", "siri") ?: "siri"
+        set(v) = prefs.edit().putString("style", v).apply()
+
     var haptics: Boolean
         get() = prefs.getBoolean("haptics", true)
         set(v) = prefs.edit().putBoolean("haptics", v).apply()

@@ -62,6 +62,8 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         visibility = GONE
     }
     private val bubbleIcon = ImageView(context)
+    private val glow = GlowView(context, pill) { radius }
+    private var glowStyle = GlowView.styleFromPref(Prefs.islandStyle)
 
     private var mode = Mode.HIDDEN
     private var shownItem: IslandItem? = null
@@ -93,9 +95,12 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                 outline.setRoundRect(0, 0, view.width, view.height, radius)
             }
         }
-        addView(pill, LayoutParams(0, 0, Gravity.TOP or Gravity.CENTER_HORIZONTAL))
+        glow.style = glowStyle
+        addView(pill, LayoutParams(0, 0, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = glowPad() })
         bubble.addView(bubbleIcon, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        addView(bubble, LayoutParams(0, 0, Gravity.TOP or Gravity.END))
+        addView(bubble, LayoutParams(0, 0, Gravity.TOP or Gravity.END).apply { topMargin = glowPad(); marginEnd = glowPad() })
+        // on top of the pill so the light line sits right on its edge; it never consumes touches
+        addView(glow, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         setupGestures()
         bubble.setOnClickListener { IslandHub.secondary()?.let { IslandHub.prefer(it.key) }; haptic(HapticFeedbackConstants.CONTEXT_CLICK) }
         visibility = INVISIBLE
@@ -119,6 +124,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     }
 
     fun render(animate: Boolean = true) {
+        applyStyle()
         val item = if (suppressed) null else IslandHub.primary()
         val secondary = if (suppressed) null else IslandHub.secondary()
         if (expandedKey != null && item?.key != expandedKey) expandedKey = null
@@ -128,6 +134,9 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             else -> Mode.COMPACT
         }
         mode = newMode
+        if (item != null && (item.key != shownItem?.key || item.updatedAt != shownItem?.updatedAt) && item.kind != Kind.MEDIA) glow.pulse()
+        if (item != null) glow.accent = item.accent
+        glow.setRunning(newMode != Mode.HIDDEN)
         shownItem = item
         removeCallbacks(mediaTicker)
 
@@ -137,6 +146,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                 animateTo(compactHeight(), compactHeight(), compactHeight() / 2f, animate, contentToExpanded = false) {
                     if (mode == Mode.HIDDEN) {
                         visibility = INVISIBLE
+                        glow.setRunning(false)
                         host.applyWindow(1, 1, cutoutCenterX, 0, touchable = false)
                     }
                 }
@@ -248,15 +258,32 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         pill.invalidateOutline()
     }
 
-    private fun placeWindow(width: Int, height: Int) {
+    private fun placeWindow(contentWidth: Int, contentHeight: Int) {
+        val pad = glowPad()
+        val width = contentWidth + 2 * pad
+        val height = contentHeight + 2 * pad
         val w = width.coerceAtMost(screenW)
         val centerX = cutoutCenterX + dp(Prefs.offsetXdp)
         val x = (centerX - w / 2).coerceIn(0, max(0, screenW - w))
-        val top = cutoutCenterY - compactHeight() / 2 + dp(Prefs.offsetYdp)
-        host.applyWindow(w, height, x, top.coerceAtLeast(0), touchable = mode != Mode.HIDDEN)
+        val top = cutoutCenterY - compactHeight() / 2 + dp(Prefs.offsetYdp) - pad
+        host.applyWindow(w, height, x, top, touchable = mode != Mode.HIDDEN)
     }
 
     private fun bubbleSize() = compactHeight()
+
+    /** room around the pill for the Siri glow */
+    private fun glowPad() = if (glowStyle == GlowView.Style.CLASSIC) 0 else dp(14)
+
+    private fun applyStyle() {
+        val style = GlowView.styleFromPref(Prefs.islandStyle)
+        if (style == glowStyle) return
+        glowStyle = style
+        glow.style = style
+        (pill.layoutParams as LayoutParams).topMargin = glowPad()
+        (bubble.layoutParams as LayoutParams).apply { topMargin = glowPad(); marginEnd = glowPad() }
+        pill.requestLayout()
+        bubble.requestLayout()
+    }
 
     // ------------------------------------------------------------ compact content
 

@@ -16,6 +16,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.Switch
@@ -64,6 +66,30 @@ class MainActivity : Activity() {
         root.addView(button(getString(R.string.test_island)) { postTest() }.apply {
             (layoutParams as? LinearLayout.LayoutParams)?.topMargin = dp(8)
         })
+
+        // look
+        section(getString(R.string.section_style))
+        card {
+            val options = listOf(
+                "siri" to R.string.style_siri,
+                "accent" to R.string.style_accent,
+                "classic" to R.string.style_classic,
+            )
+            val group = RadioGroup(this@MainActivity)
+            options.forEachIndexed { i, (value, label) ->
+                group.addView(RadioButton(this@MainActivity).apply {
+                    id = View.generateViewId()
+                    text = getString(label)
+                    setTextColor(Color.WHITE)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                    buttonTintList = ColorStateList.valueOf(Accent.DEFAULT)
+                    setPadding(dp(8), dp(10), 0, dp(10))
+                    isChecked = Prefs.islandStyle == value
+                    setOnCheckedChangeListener { _, checked -> if (checked) { Prefs.islandStyle = value; postTest() } }
+                })
+            }
+            addView(group)
+        }
 
         // position
         section(getString(R.string.section_position))

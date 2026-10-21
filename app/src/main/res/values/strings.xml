@@ -20,6 +20,10 @@
     <string name="test_text">Está funcionando! Segure a ilha para expandir, deslize para dispensar.</string>
     <string name="ok">OK</string>
 
+    <string name="section_style">Visual</string>
+    <string name="style_siri">Nova Siri — brilho colorido animado na borda</string>
+    <string name="style_accent">Brilho na cor do app</string>
+    <string name="style_classic">Clássico — preto, igual ao iPhone</string>
     <string name="section_position">Posição em volta da câmera</string>
     <string name="position_hint">A ilha se alinha sozinha à câmera do A56. Use os ajustes se quiser mudar a posição ou o tamanho.</string>
     <string name="offset_horizontal">Horizontal</string>
