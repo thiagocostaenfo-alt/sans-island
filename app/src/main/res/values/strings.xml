@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sans Island</string>
+    <string name="tagline">A ilha dinâmica do iPhone, em volta da câmera do seu Galaxy.</string>
+    <string name="accessibility_description">Mostra a ilha dinâmica em volta da câmera frontal, por cima dos outros apps. O Sans Island não lê nem guarda o conteúdo das telas: usa este acesso só para desenhar a ilha, saber qual app está aberto e esconder a ilha quando a cortina de notificações é aberta.</string>
+
+    <string name="section_permissions">Permissões</string>
+    <string name="perm_accessibility">Acessibilidade</string>
+    <string name="perm_accessibility_desc">Desenha a ilha por cima de tudo, inclusive da barra de status. Em Acessibilidade → Apps instalados → Sans Island, ative o serviço.</string>
+    <string name="perm_notifications">Acesso a notificações</string>
+    <string name="perm_notifications_desc">Mostra música, chamadas, timers, entregas e mensagens na ilha. Nada sai do celular.</string>
+    <string name="restricted_title">Opção apagada ou bloqueada?</string>
+    <string name="restricted_desc">Apps instalados por APK vêm com as configurações restritas. Abra as informações do app, toque nos três pontinhos (⋮) no canto superior e em "Permitir configurações restritas". Depois volte e ative as duas permissões acima.</string>
+    <string name="open_app_info">Abrir informações do app</string>
+    <string name="open_settings">Abrir configuração</string>
+    <string name="status_on">Ativado</string>
+    <string name="status_off">Desativado</string>
+    <string name="test_island">Testar a ilha</string>
+    <string name="test_title">Sans Island</string>
+    <string name="test_text">Está funcionando! Segure a ilha para expandir, deslize para dispensar.</string>
+    <string name="ok">OK</string>
+
+    <string name="section_position">Posição em volta da câmera</string>
+    <string name="position_hint">A ilha se alinha sozinha à câmera do A56. Use os ajustes se quiser mudar a posição ou o tamanho.</string>
+    <string name="offset_horizontal">Horizontal</string>
+    <string name="offset_vertical">Vertical</string>
+    <string name="size">Tamanho</string>
+
+    <string name="section_events">O que aparece na ilha</string>
+    <string name="kind_call">Chamadas (atender, recusar, duração)</string>
+    <string name="kind_media">Música e vídeo (capa, controles, progresso)</string>
+    <string name="kind_timer">Timer, cronômetro e alarme</string>
+    <string name="kind_notification">Notificações (WhatsApp, e-mail…)</string>
+    <string name="kind_live">Atividades ao vivo (entregas, downloads, rotas)</string>
+    <string name="kind_recording">Gravação de tela</string>
+    <string name="kind_charging">Carregamento</string>
+    <string name="kind_audio">Fones conectados</string>
+    <string name="kind_ringer">Modo silencioso e vibrar</string>
+
+    <string name="section_behavior">Comportamento</string>
+    <string name="notification_duration">Tempo da notificação na ilha</string>
+    <string name="skip_foreground">Não mostrar notificação do app que está aberto</string>
+    <string name="hide_landscape">Esconder na horizontal (vídeos e jogos)</string>
+    <string name="haptics">Vibração ao tocar</string>
+
+    <string name="section_gestures">Gestos</string>
+    <string name="gestures_help">• Toque: abre o app da atividade\n• Toque longo ou deslizar para baixo: expande\n• Deslizar para cima ou para o lado: recolhe ou dispensa\n• Bolinha ao lado da ilha: troca para a outra atividade</string>
+
+    <string name="call">Chamada</string>
+    <string name="incoming_call">Chamada recebida</string>
+    <string name="incoming_short">Ligando</string>
+    <string name="timer">Timer</string>
+    <string name="recording">Gravando a tela</string>
+    <string name="charging">Carregando</string>
+    <string name="silent">Silencioso</string>
+    <string name="vibrate">Vibrar</string>
+    <string name="sound_on">Som ativado</string>
+    <string name="headphones">Fones</string>
+    <string name="connected">Conectado</string>
+    <string name="connected_short">On</string>
+</resources>

@@ -1,0 +1,57 @@
+name: Build Sans Island APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/*.apk out/SansIsland.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SansIsland
+          path: out/SansIsland.apk
+
+      - name: Publish as latest release (easy download on the phone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Sans Island (última versão)
+          body: "APK gerado automaticamente a partir do commit ${{ github.sha }}. Baixe o SansIsland.apk abaixo e instale no celular."
+          prerelease: false
+          make_latest: true
+          files: out/SansIsland.apk
+
+      - name: Archive reports for failed job
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: '*/build/reports'
+        if: ${{ failure() }}
