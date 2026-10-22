@@ -18,6 +18,12 @@ object Prefs {
         changeListeners.toList().forEach { it() }
     }
 
+    /** the new-Siri glass look replaces whatever look was set before it existed, once */
+    fun migrateToGlass() {
+        if (prefs.getBoolean("glass_migrated", false)) return
+        prefs.edit().putString("style", "glass").putBoolean("glass_migrated", true).apply()
+    }
+
     fun addChangeListener(l: () -> Unit) { changeListeners += l }
     fun removeChangeListener(l: () -> Unit) { changeListeners -= l }
 
@@ -51,9 +57,10 @@ object Prefs {
         get() = prefs.getBoolean("skip_foreground", true)
         set(v) = prefs.edit().putBoolean("skip_foreground", v).apply()
 
-    /** "siri" (multicolor glow), "accent" (glow in the app color) or "classic" (plain black) */
+    /** "glass" (new Siri: black with silver glass and the Siri light), "siri" (multicolor glow around the edge),
+     *  "accent" (glow in the app color) or "classic" (plain black) */
     var islandStyle: String
-        get() = prefs.getString("style", "siri") ?: "siri"
+        get() = prefs.getString("style", "glass") ?: "glass"
         set(v) = prefs.edit().putString("style", v).apply()
 
     var haptics: Boolean

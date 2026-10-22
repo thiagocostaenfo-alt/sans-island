@@ -64,6 +64,13 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private val bubbleIcon = ImageView(context)
     private val glow = GlowView(context, pill) { radius }
     private var glowStyle = GlowView.styleFromPref(Prefs.islandStyle)
+    private val glass = SiriGlassDrawable(resources.displayMetrics.density)
+    private val bubbleGlass = SiriGlassDrawable(resources.displayMetrics.density)
+    private val bubblePlain = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.BLACK) }
+
+    /** item (key@update) that already had its "Siri moment", so it is not replayed */
+    private var momentToken: String? = null
+    private val finishMoment = Runnable { render() }
 
     private var mode = Mode.HIDDEN
     private var shownItem: IslandItem? = null
@@ -73,6 +80,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private var pillW = 0
     private var pillH = 0
     private var radius = 0f
+    private var pillLip = 0f
 
     // views updated by the media ticker
     private var mediaProgress: ProgressBar? = null
@@ -96,11 +104,13 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             }
         }
         glow.style = glowStyle
+        applyBackgrounds()
         addView(pill, LayoutParams(0, 0, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = glowPad() })
         bubble.addView(bubbleIcon, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         addView(bubble, LayoutParams(0, 0, Gravity.TOP or Gravity.END).apply { topMargin = glowPad(); marginEnd = glowPad() })
         // on top of the pill so the light line sits right on its edge; it never consumes touches
         addView(glow, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        pill.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> glow.invalidate() }
         setupGestures()
         bubble.setOnClickListener { IslandHub.secondary()?.let { IslandHub.prefer(it.key) }; haptic(HapticFeedbackConstants.CONTEXT_CLICK) }
         visibility = INVISIBLE
@@ -124,6 +134,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     }
 
     fun render(animate: Boolean = true) {
+        removeCallbacks(finishMoment)
         applyStyle()
         val item = if (suppressed) null else IslandHub.primary()
         val secondary = if (suppressed) null else IslandHub.secondary()
@@ -134,7 +145,10 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             else -> Mode.COMPACT
         }
         mode = newMode
-        if (item != null && (item.key != shownItem?.key || item.updatedAt != shownItem?.updatedAt) && item.kind != Kind.MEDIA) glow.pulse()
+        if (item != null && (item.key != shownItem?.key || item.updatedAt != shownItem?.updatedAt) && item.kind != Kind.MEDIA) {
+            glow.pulse()
+            if (isGlass()) glass.pulse()
+        }
         if (item != null) glow.accent = item.accent
         glow.setRunning(newMode != Mode.HIDDEN)
         shownItem = item
@@ -143,10 +157,11 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         when (newMode) {
             Mode.HIDDEN -> {
                 bubble.visibility = GONE
-                animateTo(compactHeight(), compactHeight(), compactHeight() / 2f, animate, contentToExpanded = false) {
+                animateTo(compactHeight(), compactHeight(), compactHeight() / 2f, 0f, animate, null) {
                     if (mode == Mode.HIDDEN) {
                         visibility = INVISIBLE
                         glow.setRunning(false)
+                        glass.stop()
                         host.applyWindow(1, 1, cutoutCenterX, 0, touchable = false)
                     }
                 }
@@ -157,19 +172,32 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                 val h = compactHeight()
                 val w = measureCompactWidth(h)
                 bindBubble(secondary, h)
-                animateTo(w, h, h / 2f, animate, contentToExpanded = false)
+                // the glass hangs below the black part, so the black part stays centered on the camera
+                val lip = compactLip()
+                animateTo(w, h + lip, (h + lip) / 2f, lip.toFloat(), animate, compactRow)
             }
             Mode.EXPANDED -> {
                 visibility = VISIBLE
                 bubble.visibility = GONE
-                bindExpanded(item!!)
+                // new Siri: something new arrives -> the island first swells into the glowing glass pebble
+                val token = item!!.key + "@" + item.updatedAt
+                val arrival = item.kind == Kind.NOTIFICATION || item.kind == Kind.TEST || item.incomingCall
+                if (isGlass() && animate && arrival && momentToken != token) {
+                    momentToken = token
+                    glass.listen()
+                    val ph = dp(104)
+                    animateTo(dp(150), ph, ph * 0.43f, ph * 0.47f, true, null) { postDelayed(finishMoment, 260) }
+                    return
+                }
+                bindExpanded(item)
                 val w = screenW - dp(20)
                 expandedPanel.measure(
                     MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
                 )
                 val h = max(expandedPanel.measuredHeight, compactHeight())
-                animateTo(w, h, dp(30).toFloat().coerceAtMost(h / 2f), animate, contentToExpanded = true)
+                val r = (if (isGlass()) dp(34) else dp(30)).toFloat().coerceAtMost(h / 2f)
+                animateTo(w, h, r, expandedLip().toFloat(), animate, expandedPanel)
                 if (item.media != null) post(mediaTicker)
             }
         }
@@ -189,6 +217,12 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
 
     private fun cameraGap(): Int = cutoutW + dp(14)
 
+    private fun isGlass() = glowStyle == GlowView.Style.GLASS
+
+    /** height of the glass part below the black part */
+    private fun compactLip() = if (isGlass()) (compactHeight() * 0.36f).roundToInt() else 0
+    private fun expandedLip() = if (isGlass()) dp(22) else 0
+
     private fun measureCompactWidth(h: Int): Int {
         val left = compactRow.getChildAt(0)
         val right = compactRow.getChildAt(2)
@@ -203,41 +237,41 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         return slot * 2 + cameraGap() + dp(16)
     }
 
-    private fun animateTo(targetW: Int, targetH: Int, targetRadius: Float, animate: Boolean, contentToExpanded: Boolean, end: (() -> Unit)? = null) {
+    private fun animateTo(targetW: Int, targetH: Int, targetRadius: Float, targetLip: Float, animate: Boolean, content: View?, end: (() -> Unit)? = null) {
         animator?.cancel()
         val startW = if (pillW == 0) targetH else pillW
         val startH = if (pillH == 0) targetH else pillH
         val startR = if (pillW == 0) targetH / 2f else radius
+        val startLip = if (pillW == 0) targetLip else pillLip
         val bubbleSpace = if (bubble.visibility == VISIBLE) 2 * (bubbleSize() + dp(6)) else 0
         // during the animation the window covers both sizes; it shrinks to the final size afterwards
         placeWindow(max(startW, targetW) + bubbleSpace, max(startH, targetH))
-        val fadeIn = if (contentToExpanded) expandedPanel else compactRow
-        val fadeOut = if (contentToExpanded) compactRow else expandedPanel
-        fadeOut.visibility = GONE
-        fadeIn.visibility = if (mode == Mode.HIDDEN) GONE else VISIBLE
+        for (v in listOf(compactRow, expandedPanel)) if (v !== content) v.visibility = GONE
+        content?.visibility = if (mode == Mode.HIDDEN) GONE else VISIBLE
         if (!animate) {
-            setPill(targetW, targetH, targetRadius)
-            fadeIn.alpha = 1f
+            setPill(targetW, targetH, targetRadius, targetLip)
+            content?.alpha = 1f
             placeWindow(targetW + bubbleSpace, targetH)
             end?.invoke()
             return
         }
-        fadeIn.alpha = 0f
+        content?.alpha = 0f
         animator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 450
             interpolator = OvershootInterpolator(0.9f)
             addUpdateListener {
                 val f = it.animatedValue as Float
-                setPill(lerp(startW, targetW, f), lerp(startH, targetH, f), startR + (targetRadius - startR) * f.coerceIn(0f, 1f))
-                fadeIn.alpha = ((it.animatedFraction - 0.35f) / 0.65f).coerceIn(0f, 1f)
+                val c = f.coerceIn(0f, 1f)
+                setPill(lerp(startW, targetW, f), lerp(startH, targetH, f), startR + (targetRadius - startR) * c, startLip + (targetLip - startLip) * c)
+                content?.alpha = ((it.animatedFraction - 0.35f) / 0.65f).coerceIn(0f, 1f)
             }
             addListener(object : AnimatorListenerAdapter() {
                 private var cancelled = false
                 override fun onAnimationCancel(animation: Animator) { cancelled = true }
                 override fun onAnimationEnd(animation: Animator) {
                     if (cancelled) return
-                    setPill(targetW, targetH, targetRadius)
-                    fadeIn.alpha = 1f
+                    setPill(targetW, targetH, targetRadius, targetLip)
+                    content?.alpha = 1f
                     placeWindow(targetW + bubbleSpace, targetH)
                     end?.invoke()
                 }
@@ -246,11 +280,16 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         }
     }
 
-    private fun setPill(w: Int, h: Int, r: Float) {
+    private fun setPill(w: Int, h: Int, r: Float, lip: Float) {
         pillW = w
         pillH = h
         radius = r
+        pillLip = lip
         pillBg.cornerRadius = r
+        glass.radius = r
+        glass.lip = lip
+        glass.invalidateSelf()
+        glow.invalidate()
         val lp = pill.layoutParams
         lp.width = w
         lp.height = h
@@ -272,17 +311,28 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private fun bubbleSize() = compactHeight()
 
     /** room around the pill for the Siri glow */
-    private fun glowPad() = if (glowStyle == GlowView.Style.CLASSIC) 0 else dp(14)
+    private fun glowPad() = when (glowStyle) {
+        GlowView.Style.CLASSIC -> 0
+        GlowView.Style.GLASS -> dp(18) // room for the shadow under the glass
+        else -> dp(14)
+    }
 
     private fun applyStyle() {
         val style = GlowView.styleFromPref(Prefs.islandStyle)
         if (style == glowStyle) return
         glowStyle = style
         glow.style = style
+        if (style != GlowView.Style.GLASS) glass.stop()
+        applyBackgrounds()
         (pill.layoutParams as LayoutParams).topMargin = glowPad()
         (bubble.layoutParams as LayoutParams).apply { topMargin = glowPad(); marginEnd = glowPad() }
         pill.requestLayout()
         bubble.requestLayout()
+    }
+
+    private fun applyBackgrounds() {
+        pill.background = if (isGlass()) glass else pillBg
+        bubble.background = if (isGlass()) bubbleGlass else bubblePlain
     }
 
     // ------------------------------------------------------------ compact content
@@ -319,7 +369,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             }, LinearLayout.LayoutParams(dp(8), dp(8)))
         }
 
-        compactRow.setPadding(dp(8), 0, dp(8), 0)
+        compactRow.setPadding(dp(8), 0, dp(8), compactLip())
         compactRow.addView(left, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT))
         compactRow.addView(View(context), LinearLayout.LayoutParams(cameraGap(), 1))
         compactRow.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT))
@@ -330,6 +380,9 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         bubble.visibility = VISIBLE
         (bubble.layoutParams as LayoutParams).apply { width = size; height = size }
         bubble.requestLayout()
+        bubbleGlass.radius = size / 2f
+        bubbleGlass.lip = size * 0.34f
+        bubbleGlass.invalidateSelf()
         val pad = (size * 0.2f).roundToInt()
         bubbleIcon.setPadding(pad, pad, pad, pad)
         applyIcon(bubbleIcon, secondary, rounded = (size - 2 * pad) / 2f)
@@ -340,7 +393,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private fun bindExpanded(item: IslandItem) {
         expandedPanel.removeAllViews()
         mediaProgress = null; mediaElapsed = null; mediaRemaining = null
-        expandedPanel.setPadding(dp(16), dp(14), dp(16), dp(14))
+        expandedPanel.setPadding(dp(16), dp(14), dp(16), dp(14) + expandedLip())
 
         val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val iconSize = dp(46)

@@ -12,7 +12,7 @@ Ilha dinâmica (estilo iPhone) para Android, desenhada em volta da câmera front
 - **Gravação de tela**, **carregamento** (com %), **fones conectados**, **modo silencioso/vibrar**
 - Duas atividades ao mesmo tempo: a segunda aparece numa bolinha ao lado
 
-Visual "Nova Siri": brilho colorido animado (laranja, rosa, roxo, azul) correndo pela borda da ilha, com halo que "respira" e pisca quando chega algo novo. Também há os estilos "Brilho na cor do app" e "Clássico" (preto).
+Visual "Nova Siri" (padrão): a ilha é preta em volta da câmera e vira vidro prateado na base, com a luz colorida da Siri onde os dois se encontram e uma sombra suave embaixo. Quando chega algo, ela cresce primeiro no "seixo" de vidro brilhante e depois abre o cartão. Também há os estilos "Brilho colorido", "Brilho na cor do app" e "Clássico" (preto).
 
 A cor de destaque vem do app de origem (ícone do app ou capa do álbum), como no Sans Keyboard.
 

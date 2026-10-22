@@ -21,7 +21,8 @@
     <string name="ok">OK</string>
 
     <string name="section_style">Visual</string>
-    <string name="style_siri">Nova Siri — brilho colorido animado na borda</string>
+    <string name="style_glass">Nova Siri — preto com vidro e a luz colorida</string>
+    <string name="style_siri">Brilho colorido animado na borda</string>
     <string name="style_accent">Brilho na cor do app</string>
     <string name="style_classic">Clássico — preto, igual ao iPhone</string>
     <string name="section_position">Posição em volta da câmera</string>

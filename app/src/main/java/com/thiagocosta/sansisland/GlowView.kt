@@ -20,7 +20,7 @@ import kotlin.math.sin
  */
 class GlowView(context: Context, private val target: View, private val radius: () -> Float) : View(context) {
 
-    enum class Style { SIRI, ACCENT, CLASSIC }
+    enum class Style { SIRI, ACCENT, CLASSIC, GLASS }
 
     private val density = resources.displayMetrics.density
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.8f * density }
@@ -30,6 +30,12 @@ class GlowView(context: Context, private val target: View, private val radius: (
         maskFilter = BlurMaskFilter(9f * density, BlurMaskFilter.Blur.NORMAL)
     }
     private val rect = RectF()
+    private val pillPath = android.graphics.Path()
+    /** soft shadow under the glass island, as if it floats above the screen */
+    private val shadow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = 0x70000000
+        maskFilter = BlurMaskFilter(12f * density, BlurMaskFilter.Blur.NORMAL)
+    }
     private val shaderMatrix = Matrix()
     private var shader: SweepGradient? = null
     private var angle = 0f
@@ -61,7 +67,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
 
     /** brief flash when something new arrives, like Siri lighting up */
     fun pulse() {
-        if (style == Style.CLASSIC) return
+        if (style == Style.CLASSIC || style == Style.GLASS) return
         pulseAnimator?.cancel()
         pulseAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
             duration = 900
@@ -71,7 +77,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
     }
 
     fun setRunning(running: Boolean) {
-        if (running && style != Style.CLASSIC) { if (!spin.isStarted) spin.start() } else spin.cancel()
+        if (running && (style == Style.SIRI || style == Style.ACCENT)) { if (!spin.isStarted) spin.start() } else spin.cancel()
     }
 
     override fun onDetachedFromWindow() {
@@ -88,7 +94,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
                 val deep = ColorUtils.blendARGB(accent, Color.BLACK, 0.25f)
                 intArrayOf(accent, light, accent, deep, accent)
             }
-            Style.CLASSIC -> null
+            Style.CLASSIC, Style.GLASS -> null
         }
         shader = colors?.let { SweepGradient(0f, 0f, it, null) }
         line.shader = shader
@@ -96,8 +102,12 @@ class GlowView(context: Context, private val target: View, private val radius: (
     }
 
     override fun onDraw(canvas: Canvas) {
-        val s = shader ?: return
         if (target.visibility != VISIBLE || target.width == 0 || target.height == 0) return
+        if (style == Style.GLASS) {
+            drawShadow(canvas)
+            return
+        }
+        val s = shader ?: return
         rect.set(target.left.toFloat(), target.top.toFloat(), target.right.toFloat(), target.bottom.toFloat())
         shaderMatrix.reset()
         shaderMatrix.setRotate(angle)
@@ -116,6 +126,20 @@ class GlowView(context: Context, private val target: View, private val radius: (
         canvas.drawRoundRect(rect, r - inset, r - inset, line)
     }
 
+    private fun drawShadow(canvas: Canvas) {
+        val r = radius()
+        rect.set(target.left.toFloat(), target.top.toFloat(), target.right.toFloat(), target.bottom.toFloat())
+        pillPath.reset()
+        pillPath.addRoundRect(rect, r, r, android.graphics.Path.Direction.CW)
+        canvas.save()
+        canvas.clipOutPath(pillPath) // only around the island, never over it
+        val inset = rect.width() * 0.05f
+        rect.inset(inset, 0f)
+        rect.offset(0f, 7f * density)
+        canvas.drawRoundRect(rect, r, r, shadow)
+        canvas.restore()
+    }
+
     companion object {
         // the warm-to-cool sweep of Apple's Siri glow
         private val SIRI_COLORS = intArrayOf(
@@ -130,7 +154,8 @@ class GlowView(context: Context, private val target: View, private val radius: (
         fun styleFromPref(value: String) = when (value) {
             "accent" -> Style.ACCENT
             "classic" -> Style.CLASSIC
-            else -> Style.SIRI
+            "siri" -> Style.SIRI
+            else -> Style.GLASS
         }
     }
 }

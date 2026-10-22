@@ -71,6 +71,7 @@ class MainActivity : Activity() {
         section(getString(R.string.section_style))
         card {
             val options = listOf(
+                "glass" to R.string.style_glass,
                 "siri" to R.string.style_siri,
                 "accent" to R.string.style_accent,
                 "classic" to R.string.style_classic,
