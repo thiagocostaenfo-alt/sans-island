@@ -16,6 +16,10 @@ Visual "Nova Siri": brilho colorido animado (laranja, rosa, roxo, azul) correndo
 
 A cor de destaque vem do app de origem (ícone do app ou capa do álbum), como no Sans Keyboard.
 
+## Widgets do Google
+
+Dois widgets de barra de pesquisa: *Google · vidro esfumaçado* e *Google · vidro dos ícones*. Segure a tela inicial → Widgets → Sans Island. Pesquisar, voz e câmera (Lens).
+
 ## Gestos
 
 Toque abre o app · toque longo ou deslizar para baixo expande · deslizar para cima/lado recolhe ou dispensa · bolinha troca de atividade.

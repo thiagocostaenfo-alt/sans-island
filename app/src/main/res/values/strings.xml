@@ -62,4 +62,11 @@
     <string name="headphones">Fones</string>
     <string name="connected">Conectado</string>
     <string name="connected_short">On</string>
+    <string name="widget_search_hint">Pesquisar</string>
+    <string name="widget_voice">Pesquisa por voz</string>
+    <string name="widget_lens">Pesquisar com a câmera</string>
+    <string name="widget_label_smoky">Google · vidro esfumaçado</string>
+    <string name="widget_label_icon">Google · vidro dos ícones</string>
+    <string name="widget_desc_smoky">Barra de pesquisa cinza translúcida, como o Sans Keyboard</string>
+    <string name="widget_desc_icon">Barra preta que fica transparente embaixo, como os ícones de vidro</string>
 </resources>

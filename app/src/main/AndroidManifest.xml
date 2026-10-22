@@ -4,6 +4,14 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <queries>
+        <!-- the search widget shows the Google app's own G and opens its search, voice search and Lens -->
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <intent>
+            <action android:name="android.search.action.GLOBAL_SEARCH" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.action.WEB_SEARCH" />
+        </intent>
         <!-- to read the icons and names of the apps that post notifications -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
@@ -51,5 +59,32 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <receiver
+            android:name=".SearchWidgetSmoky"
+            android:exported="true"
+            android:label="@string/widget_label_smoky">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_search_smoky" />
+        </receiver>
+
+        <receiver
+            android:name=".SearchWidgetIcon"
+            android:exported="true"
+            android:label="@string/widget_label_icon">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_search_icon" />
+        </receiver>
+
+        <activity
+            android:name=".SearchLauncher"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
     </application>
 </manifest>
