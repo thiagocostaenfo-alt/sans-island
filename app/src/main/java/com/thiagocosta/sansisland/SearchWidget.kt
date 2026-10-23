@@ -51,7 +51,7 @@ abstract class SearchWidget(private val style: Style) : AppWidgetProvider() {
     /** the Google app's own "G", square, without the white circle of its launcher icon */
     private fun googleIconBitmap(context: Context): Bitmap? = try {
         val icon = context.packageManager.getApplicationIcon(GOOGLE_PKG)
-        val size = (22 * context.resources.displayMetrics.density * 2).roundToInt() // 2x for crisp scaling
+        val size = (26 * context.resources.displayMetrics.density * 2).roundToInt() // 2x for crisp scaling
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         if (icon is AdaptiveIconDrawable) {

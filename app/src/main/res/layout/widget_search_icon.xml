@@ -6,10 +6,10 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="42dp"
+        android:layout_height="49dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="4dp"
-        android:layout_marginEnd="4dp">
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp">
 
         <ImageView
             android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:layout_height="match_parent"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="12dp"
+            android:paddingStart="16dp"
             android:paddingEnd="6dp">
 
             <LinearLayout
@@ -37,8 +37,8 @@
 
                 <ImageView
                     android:id="@+id/widget_g"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_search"
                     android:importantForAccessibility="no" />
@@ -50,26 +50,26 @@
                     android:maxLines="1"
                     android:text="@string/widget_search_hint"
                     android:textColor="#CDD0D6"
-                    android:textSize="15sp" />
+                    android:textSize="16sp" />
             </LinearLayout>
 
             <ImageView
                 android:id="@+id/widget_mic"
-                android:layout_width="40dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/widget_voice"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_mic" />
 
             <ImageView
                 android:id="@+id/widget_lens"
-                android:layout_width="40dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/widget_lens"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_lens" />
         </LinearLayout>
