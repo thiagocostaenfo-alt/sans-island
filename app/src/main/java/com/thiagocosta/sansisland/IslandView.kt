@@ -66,6 +66,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private var glowStyle = GlowView.styleFromPref(Prefs.islandStyle)
     private val glass = SiriGlassDrawable(resources.displayMetrics.density)
     private val bubbleGlass = SiriGlassDrawable(resources.displayMetrics.density)
+    private val fluid = FluidCloudDrawable(resources.displayMetrics.density)
     private val bubblePlain = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.BLACK) }
 
     /** item (key@update) that already had its "Siri moment", so it is not replayed */
@@ -86,6 +87,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private var mediaProgress: ProgressBar? = null
     private var mediaElapsed: TextView? = null
     private var mediaRemaining: TextView? = null
+    private var mediaChase: ChasingProgressView? = null
     private val mediaTicker = object : Runnable {
         override fun run() {
             updateMediaProgress()
@@ -150,6 +152,9 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             if (isGlass()) glass.pulse()
         }
         if (item != null) glow.accent = item.accent
+        val before = shownItem
+        if (isFluid() && item?.media != null && before?.key == item.key &&
+            (before.media?.playing != item.media.playing || before.title != item.title)) fluid.ripple()
         glow.setRunning(newMode != Mode.HIDDEN)
         shownItem = item
         removeCallbacks(mediaTicker)
@@ -162,6 +167,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                         visibility = INVISIBLE
                         glow.setRunning(false)
                         glass.stop()
+                        fluid.stop()
                         host.applyWindow(1, 1, cutoutCenterX, 0, touchable = false)
                     }
                 }
@@ -190,13 +196,13 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                     return
                 }
                 bindExpanded(item)
-                val w = screenW - dp(20)
+                val w = screenW - if (isFluid()) dp(24) else dp(20)
                 expandedPanel.measure(
                     MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY),
                     MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
                 )
                 val h = max(expandedPanel.measuredHeight, compactHeight())
-                val r = (if (isGlass()) dp(34) else dp(30)).toFloat().coerceAtMost(h / 2f)
+                val r = (if (isGlass()) dp(34) else if (isFluid()) dp(28) else dp(30)).toFloat().coerceAtMost(h / 2f)
                 animateTo(w, h, r, expandedLip().toFloat(), animate, expandedPanel)
                 if (item.media != null) post(mediaTicker)
             }
@@ -218,6 +224,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     private fun cameraGap(): Int = cutoutW + dp(14)
 
     private fun isGlass() = glowStyle == GlowView.Style.GLASS
+    private fun isFluid() = glowStyle == GlowView.Style.FLUID
 
     /** height of the glass part below the black part */
     private fun compactLip() = if (isGlass()) (compactHeight() * 0.36f).roundToInt() else 0
@@ -243,12 +250,15 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         val startH = if (pillH == 0) targetH else pillH
         val startR = if (pillW == 0) targetH / 2f else radius
         val startLip = if (pillW == 0) targetLip else pillLip
+        val startExp = fluid.expansion
+        val targetExp = if (content === expandedPanel) 1f else 0f
         val bubbleSpace = if (bubble.visibility == VISIBLE) 2 * (bubbleSize() + dp(6)) else 0
         // during the animation the window covers both sizes; it shrinks to the final size afterwards
         placeWindow(max(startW, targetW) + bubbleSpace, max(startH, targetH))
         for (v in listOf(compactRow, expandedPanel)) if (v !== content) v.visibility = GONE
         content?.visibility = if (mode == Mode.HIDDEN) GONE else VISIBLE
         if (!animate) {
+            fluid.expansion = targetExp
             setPill(targetW, targetH, targetRadius, targetLip)
             content?.alpha = 1f
             placeWindow(targetW + bubbleSpace, targetH)
@@ -262,6 +272,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             addUpdateListener {
                 val f = it.animatedValue as Float
                 val c = f.coerceIn(0f, 1f)
+                fluid.expansion = startExp + (targetExp - startExp) * c
                 setPill(lerp(startW, targetW, f), lerp(startH, targetH, f), startR + (targetRadius - startR) * c, startLip + (targetLip - startLip) * c)
                 content?.alpha = ((it.animatedFraction - 0.35f) / 0.65f).coerceIn(0f, 1f)
             }
@@ -270,6 +281,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
                 override fun onAnimationCancel(animation: Animator) { cancelled = true }
                 override fun onAnimationEnd(animation: Animator) {
                     if (cancelled) return
+                    fluid.expansion = targetExp
                     setPill(targetW, targetH, targetRadius, targetLip)
                     content?.alpha = 1f
                     placeWindow(targetW + bubbleSpace, targetH)
@@ -289,6 +301,8 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         glass.radius = r
         glass.lip = lip
         glass.invalidateSelf()
+        fluid.radius = r
+        fluid.invalidateSelf()
         glow.invalidate()
         val lp = pill.layoutParams
         lp.width = w
@@ -313,7 +327,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     /** room around the pill for the Siri glow */
     private fun glowPad() = when (glowStyle) {
         GlowView.Style.CLASSIC -> 0
-        GlowView.Style.GLASS -> dp(18) // room for the shadow under the glass
+        GlowView.Style.GLASS, GlowView.Style.FLUID -> dp(18) // room for the shadow under the island
         else -> dp(14)
     }
 
@@ -323,6 +337,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         glowStyle = style
         glow.style = style
         if (style != GlowView.Style.GLASS) glass.stop()
+        if (style != GlowView.Style.FLUID) fluid.stop()
         applyBackgrounds()
         (pill.layoutParams as LayoutParams).topMargin = glowPad()
         (bubble.layoutParams as LayoutParams).apply { topMargin = glowPad(); marginEnd = glowPad() }
@@ -331,7 +346,11 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     }
 
     private fun applyBackgrounds() {
-        pill.background = if (isGlass()) glass else pillBg
+        pill.background = when {
+            isGlass() -> glass
+            isFluid() -> fluid
+            else -> pillBg
+        }
         bubble.background = if (isGlass()) bubbleGlass else bubblePlain
     }
 
@@ -347,7 +366,8 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             gravity = Gravity.CENTER_VERTICAL or Gravity.START
             setPadding(dp(4), 0, 0, 0)
         }
-        left.addView(iconView(item, iconSize, rounded = iconSize / 2f), LinearLayout.LayoutParams(iconSize, iconSize))
+        val round = if (isFluid() && item.iconIsPicture) iconSize * 0.3f else iconSize / 2f
+        left.addView(iconView(item, iconSize, rounded = round), LinearLayout.LayoutParams(iconSize, iconSize))
         item.compactLabel?.let {
             left.addView(text(it, 13f, Color.WHITE, bold = true).apply { setPadding(dp(6), 0, 0, 0) })
         }
@@ -392,7 +412,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
 
     private fun bindExpanded(item: IslandItem) {
         expandedPanel.removeAllViews()
-        mediaProgress = null; mediaElapsed = null; mediaRemaining = null
+        mediaProgress = null; mediaElapsed = null; mediaRemaining = null; mediaChase = null
         expandedPanel.setPadding(dp(16), dp(14), dp(16), dp(14) + expandedLip())
 
         val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
@@ -416,9 +436,15 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         expandedPanel.addView(header)
 
         if (item.media != null && item.media.durationMs > 0) {
-            val bar = progressBar(item.accent).apply { max = 1000 }
-            mediaProgress = bar
-            expandedPanel.addView(bar, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)).apply { topMargin = dp(14) })
+            if (isFluid()) {
+                val chase = ChasingProgressView(context).apply { color = item.accent }
+                mediaChase = chase
+                expandedPanel.addView(chase, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(12)).apply { topMargin = dp(10) })
+            } else {
+                val bar = progressBar(item.accent).apply { max = 1000 }
+                mediaProgress = bar
+                expandedPanel.addView(bar, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)).apply { topMargin = dp(14) })
+            }
             val times = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             mediaElapsed = text("0:00", 11f, 0xFF8E8E93.toInt())
             mediaRemaining = text("", 11f, 0xFF8E8E93.toInt()).apply { gravity = Gravity.END }
@@ -426,6 +452,12 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             times.addView(mediaRemaining, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             expandedPanel.addView(times, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(4) })
             updateMediaProgress()
+        } else if ((item.progress != null || item.indeterminate) && isFluid()) {
+            val chase = ChasingProgressView(context).apply {
+                color = item.accent
+                progress = if (item.indeterminate && item.progress == null) null else item.progress ?: 0f
+            }
+            expandedPanel.addView(chase, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(12)).apply { topMargin = dp(10) })
         } else if (item.progress != null || item.indeterminate) {
             val bar = progressBar(item.accent).apply {
                 isIndeterminate = item.indeterminate && item.progress == null
@@ -475,10 +507,11 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
 
     private fun updateMediaProgress() {
         val media = shownItem?.media ?: return
-        val bar = mediaProgress ?: return
+        if (mediaProgress == null && mediaChase == null) return
         val elapsedSinceUpdate = if (media.playing) ((SystemClock.elapsedRealtime() - media.positionAt) * media.speed).toLong() else 0L
         val pos = (media.positionMs + elapsedSinceUpdate).coerceIn(0L, media.durationMs)
-        bar.progress = if (media.durationMs > 0) (pos * 1000 / media.durationMs).toInt() else 0
+        mediaProgress?.progress = if (media.durationMs > 0) (pos * 1000 / media.durationMs).toInt() else 0
+        mediaChase?.progress = if (media.durationMs > 0) pos.toFloat() / media.durationMs else 0f
         mediaElapsed?.text = formatTime(pos)
         mediaRemaining?.text = "-" + formatTime(media.durationMs - pos)
     }
@@ -524,7 +557,10 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
             }
         })
         pill.setOnTouchListener { _, event ->
-            if (event.actionMasked == MotionEvent.ACTION_DOWN) bumpAutoCollapse()
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                bumpAutoCollapse()
+                if (isFluid()) fluid.touch(event.x, event.y)
+            }
             detector.onTouchEvent(event)
         }
     }

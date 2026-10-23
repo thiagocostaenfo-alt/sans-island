@@ -24,6 +24,12 @@ object Prefs {
         prefs.edit().putString("style", "glass").putBoolean("glass_migrated", true).apply()
     }
 
+    /** ColorOS Fluid Cloud look, asked for after the glass one: switch to it once */
+    fun migrateToFluid() {
+        if (prefs.getBoolean("fluid_migrated", false)) return
+        prefs.edit().putString("style", "fluid").putBoolean("fluid_migrated", true).putBoolean("glass_migrated", true).apply()
+    }
+
     fun addChangeListener(l: () -> Unit) { changeListeners += l }
     fun removeChangeListener(l: () -> Unit) { changeListeners -= l }
 
@@ -60,7 +66,7 @@ object Prefs {
     /** "glass" (new Siri: black with silver glass and the Siri light), "siri" (multicolor glow around the edge),
      *  "accent" (glow in the app color) or "classic" (plain black) */
     var islandStyle: String
-        get() = prefs.getString("style", "glass") ?: "glass"
+        get() = prefs.getString("style", "fluid") ?: "fluid"
         set(v) = prefs.edit().putString("style", v).apply()
 
     var haptics: Boolean

@@ -71,6 +71,7 @@ class MainActivity : Activity() {
         section(getString(R.string.section_style))
         card {
             val options = listOf(
+                "fluid" to R.string.style_fluid,
                 "glass" to R.string.style_glass,
                 "siri" to R.string.style_siri,
                 "accent" to R.string.style_accent,
@@ -108,7 +109,6 @@ class MainActivity : Activity() {
                 Kind.CALL to R.string.kind_call,
                 Kind.MEDIA to R.string.kind_media,
                 Kind.TIMER to R.string.kind_timer,
-                Kind.NOTIFICATION to R.string.kind_notification,
                 Kind.LIVE to R.string.kind_live,
                 Kind.RECORDING to R.string.kind_recording,
                 Kind.CHARGING to R.string.kind_charging,
@@ -122,8 +122,6 @@ class MainActivity : Activity() {
         // behavior
         section(getString(R.string.section_behavior))
         card {
-            slider(this, getString(R.string.notification_duration), 2, 10, Prefs.notificationSeconds, "s") { Prefs.notificationSeconds = it }
-            switch(this, getString(R.string.skip_foreground), Prefs.skipForegroundApp) { Prefs.skipForegroundApp = it }
             switch(this, getString(R.string.hide_landscape), Prefs.hideInLandscape) { Prefs.hideInLandscape = it }
             switch(this, getString(R.string.haptics), Prefs.haptics) { Prefs.haptics = it }
         }

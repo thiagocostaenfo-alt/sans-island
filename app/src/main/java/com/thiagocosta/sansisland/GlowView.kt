@@ -20,7 +20,7 @@ import kotlin.math.sin
  */
 class GlowView(context: Context, private val target: View, private val radius: () -> Float) : View(context) {
 
-    enum class Style { SIRI, ACCENT, CLASSIC, GLASS }
+    enum class Style { SIRI, ACCENT, CLASSIC, GLASS, FLUID }
 
     private val density = resources.displayMetrics.density
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.8f * density }
@@ -67,7 +67,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
 
     /** brief flash when something new arrives, like Siri lighting up */
     fun pulse() {
-        if (style == Style.CLASSIC || style == Style.GLASS) return
+        if (style == Style.CLASSIC || style == Style.GLASS || style == Style.FLUID) return
         pulseAnimator?.cancel()
         pulseAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
             duration = 900
@@ -94,7 +94,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
                 val deep = ColorUtils.blendARGB(accent, Color.BLACK, 0.25f)
                 intArrayOf(accent, light, accent, deep, accent)
             }
-            Style.CLASSIC, Style.GLASS -> null
+            Style.CLASSIC, Style.GLASS, Style.FLUID -> null
         }
         shader = colors?.let { SweepGradient(0f, 0f, it, null) }
         line.shader = shader
@@ -103,7 +103,7 @@ class GlowView(context: Context, private val target: View, private val radius: (
 
     override fun onDraw(canvas: Canvas) {
         if (target.visibility != VISIBLE || target.width == 0 || target.height == 0) return
-        if (style == Style.GLASS) {
+        if (style == Style.GLASS || style == Style.FLUID) {
             drawShadow(canvas)
             return
         }
@@ -155,7 +155,8 @@ class GlowView(context: Context, private val target: View, private val radius: (
             "accent" -> Style.ACCENT
             "classic" -> Style.CLASSIC
             "siri" -> Style.SIRI
-            else -> Style.GLASS
+            "glass" -> Style.GLASS
+            else -> Style.FLUID
         }
     }
 }

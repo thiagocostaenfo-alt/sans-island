@@ -10,8 +10,8 @@ android {
         applicationId = "com.thiagocosta.sansisland"
         minSdk = 29
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
     }
 
     signingConfigs {

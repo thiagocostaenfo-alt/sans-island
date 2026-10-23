@@ -7,12 +7,13 @@ Ilha dinâmica (estilo iPhone) para Android, desenhada em volta da câmera front
 - **Música e vídeo**: capa do álbum, ondinha animada, controles e progresso (qualquer player)
 - **Chamadas**: chamada recebida com Atender/Recusar, duração da chamada em andamento
 - **Timer, cronômetro e alarme**: contagem ao vivo
-- **Notificações**: a ilha expande com a mensagem e some sozinha
 - **Atividades ao vivo**: entregas, downloads, rotas e as Live Updates do Android 16, com barra de progresso
 - **Gravação de tela**, **carregamento** (com %), **fones conectados**, **modo silencioso/vibrar**
 - Duas atividades ao mesmo tempo: a segunda aparece numa bolinha ao lado
 
-Visual "Nova Siri" (padrão): a ilha é preta em volta da câmera e vira vidro prateado na base, com a luz colorida da Siri onde os dois se encontram e uma sombra suave embaixo. Quando chega algo, ela cresce primeiro no "seixo" de vidro brilhante e depois abre o cartão. Também há os estilos "Brilho colorido", "Brilho na cor do app" e "Clássico" (preto).
+Visual "Nuvem Fluida" (padrão, como no ColorOS): cápsula preta e sólida em volta da câmera que se abre num cartão de vidro escuro translúcido com contorno claro; brilho suave onde o dedo toca, onda de luz ao pausar ou trocar de música e barra de progresso com luz que corre. Mensagens não aparecem na ilha, só atividades ao vivo.
+
+Visual "Nova Siri": a ilha é preta em volta da câmera e vira vidro prateado na base, com a luz colorida da Siri onde os dois se encontram e uma sombra suave embaixo. Quando chega algo, ela cresce primeiro no "seixo" de vidro brilhante e depois abre o cartão. Também há os estilos "Brilho colorido", "Brilho na cor do app" e "Clássico" (preto).
 
 A cor de destaque vem do app de origem (ícone do app ou capa do álbum), como no Sans Keyboard.
 

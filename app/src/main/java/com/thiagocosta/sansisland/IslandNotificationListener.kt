@@ -145,23 +145,9 @@ class IslandNotificationListener : NotificationListenerService() {
                 actions = notificationActions(sbn, call = false), open = open,
             ))
             ongoing -> Unit // silent ongoing notifications (VPN, USB...) are not island material
-            else -> {
-                if (initial) return
-                if (title.isEmpty() && text.isEmpty()) return
-                // updates of a notification already shown, without a new alert, are skipped
-                val previous = lastAlertWhen[sbn.key]
-                if (previous != null && ((n.flags and Notification.FLAG_ONLY_ALERT_ONCE) != 0 || previous == n.`when`)) return
-                if (!alerts(sbn)) return
-                lastAlertWhen[sbn.key] = n.`when`
-                if (Prefs.skipForegroundApp && IslandHub.foregroundPackage == pkg) return
-                IslandHub.post(IslandItem(
-                    key = sbn.key, kind = Kind.NOTIFICATION, pkg = pkg,
-                    title = title.ifEmpty { appLabel(pkg) }, text = text,
-                    icon = icon, iconIsPicture = largeIcon(n) != null, accent = accent,
-                    actions = notificationActions(sbn, call = false), open = open,
-                    durationMs = Prefs.notificationSeconds * 1000L,
-                ))
-            }
+            // regular notifications (messages, e-mail...) stay out of the island, like ColorOS' Fluid Cloud:
+            // it only shows live activities
+            else -> Unit
         }
     }
 

@@ -8,7 +8,7 @@
     <string name="perm_accessibility">Acessibilidade</string>
     <string name="perm_accessibility_desc">Desenha a ilha por cima de tudo, inclusive da barra de status. Em Acessibilidade → Apps instalados → Sans Island, ative o serviço.</string>
     <string name="perm_notifications">Acesso a notificações</string>
-    <string name="perm_notifications_desc">Mostra música, chamadas, timers, entregas e mensagens na ilha. Nada sai do celular.</string>
+    <string name="perm_notifications_desc">Mostra música, chamadas, timers, entregas e outras atividades ao vivo na ilha. Mensagens não aparecem. Nada sai do celular.</string>
     <string name="restricted_title">Opção apagada ou bloqueada?</string>
     <string name="restricted_desc">Apps instalados por APK vêm com as configurações restritas. Abra as informações do app, toque nos três pontinhos (⋮) no canto superior e em "Permitir configurações restritas". Depois volte e ative as duas permissões acima.</string>
     <string name="open_app_info">Abrir informações do app</string>
@@ -21,6 +21,7 @@
     <string name="ok">OK</string>
 
     <string name="section_style">Visual</string>
+    <string name="style_fluid">Nuvem Fluida (ColorOS): cápsula preta, cartão de vidro e luz ao tocar</string>
     <string name="style_glass">Nova Siri — preto com vidro e a luz colorida</string>
     <string name="style_siri">Brilho colorido animado na borda</string>
     <string name="style_accent">Brilho na cor do app</string>

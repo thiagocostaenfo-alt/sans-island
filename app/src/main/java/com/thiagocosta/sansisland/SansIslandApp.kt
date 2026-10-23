@@ -7,5 +7,6 @@ class SansIslandApp : Application() {
         super.onCreate()
         Prefs.init(this)
         Prefs.migrateToGlass()
+        Prefs.migrateToFluid()
     }
 }
