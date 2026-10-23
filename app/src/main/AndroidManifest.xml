@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- only used to fetch live scores of the followed teams -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <queries>
         <!-- the search widget shows the Google app's own G and opens its search, voice search and Lens -->

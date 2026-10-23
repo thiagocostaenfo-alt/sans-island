@@ -43,6 +43,15 @@
     <string name="kind_audio">Fones conectados</string>
     <string name="kind_ringer">Modo silencioso e vibrar</string>
 
+    <string name="kind_score">Placar ao vivo dos seus times</string>
+    <string name="section_scores">Placar ao vivo</string>
+    <string name="scores_hint">O placar aparece sozinho na ilha 15 minutos antes do jogo e fica até 15 minutos depois do fim. Num gol, a ilha abre por alguns segundos. Os placares vêm do serviço público da ESPN (o app usa a internet só para isso). Jogos que a ESPN não cobre, como o Campeonato Paraense, aparecem pelas notificações de apps de placar (ge, SofaScore, OneFootball).</string>
+    <string name="scores_search_hint">Buscar time (ex.: Remo)</string>
+    <string name="scores_search">Buscar time</string>
+    <string name="scores_searching">Buscando…</string>
+    <string name="scores_none">Nenhum time encontrado. Tente o nome sem acentos.</string>
+    <string name="scores_remove">Remover</string>
+    <string name="scores_no_teams">Nenhum time seguido.</string>
     <string name="section_behavior">Comportamento</string>
     <string name="notification_duration">Tempo da notificação na ilha</string>
     <string name="skip_foreground">Não mostrar notificação do app que está aberto</string>

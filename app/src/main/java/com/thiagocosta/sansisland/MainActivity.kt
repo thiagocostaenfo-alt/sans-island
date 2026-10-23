@@ -108,6 +108,7 @@ class MainActivity : Activity() {
             listOf(
                 Kind.CALL to R.string.kind_call,
                 Kind.MEDIA to R.string.kind_media,
+                Kind.SCORE to R.string.kind_score,
                 Kind.TIMER to R.string.kind_timer,
                 Kind.LIVE to R.string.kind_live,
                 Kind.RECORDING to R.string.kind_recording,
@@ -120,6 +121,47 @@ class MainActivity : Activity() {
         }
 
         // behavior
+        // live scores
+        section(getString(R.string.section_scores))
+        card {
+            addView(text(getString(R.string.scores_hint), 13f, GRAY).apply { setPadding(0, 0, 0, dp(8)) })
+            teamsBox = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+            addView(teamsBox)
+            val search = android.widget.EditText(this@MainActivity).apply {
+                id = View.generateViewId()
+                hint = getString(R.string.scores_search_hint)
+                setTextColor(Color.WHITE)
+                setHintTextColor(GRAY)
+                isSingleLine = true
+                backgroundTintList = ColorStateList.valueOf(Accent.DEFAULT)
+            }
+            addView(search)
+            val results = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+            addView(button(getString(R.string.scores_search)) {
+                val q = search.text.toString().trim()
+                if (q.length < 2) return@button
+                results.removeAllViews()
+                results.addView(text(getString(R.string.scores_searching), 13f, GRAY).apply { setPadding(0, dp(8), 0, 0) })
+                ScoreWatcher.search(q) { found ->
+                    results.removeAllViews()
+                    if (found.isEmpty()) results.addView(text(getString(R.string.scores_none), 13f, GRAY).apply { setPadding(0, dp(8), 0, 0) })
+                    found.take(8).forEach { team ->
+                        results.addView(text("+  " + team.name, 15f, Accent.DEFAULT, bold = true).apply {
+                            setPadding(0, dp(10), 0, dp(10))
+                            setOnClickListener {
+                                val list = Prefs.followedTeams().filter { it.id != team.id } + team
+                                Prefs.setFollowedTeams(list)
+                                results.removeAllViews(); search.setText("")
+                                renderTeams(); ScoreWatcher.refreshNow()
+                            }
+                        })
+                    }
+                }
+            }.apply { (layoutParams as LinearLayout.LayoutParams).topMargin = dp(8) })
+            addView(results)
+        }
+        renderTeams()
+
         section(getString(R.string.section_behavior))
         card {
             switch(this, getString(R.string.hide_landscape), Prefs.hideInLandscape) { Prefs.hideInLandscape = it }
@@ -160,6 +202,26 @@ class MainActivity : Activity() {
     private fun setStatus(view: TextView, on: Boolean) {
         view.text = getString(if (on) R.string.status_on else R.string.status_off)
         view.setTextColor(if (on) Accent.GREEN else Accent.ORANGE)
+    }
+
+    private lateinit var teamsBox: LinearLayout
+
+    private fun renderTeams() {
+        teamsBox.removeAllViews()
+        val teams = Prefs.followedTeams()
+        if (teams.isEmpty()) teamsBox.addView(text(getString(R.string.scores_no_teams), 14f, GRAY).apply { setPadding(0, dp(6), 0, dp(6)) })
+        teams.forEach { team ->
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(8), 0, dp(8)) }
+            row.addView(text(team.name, 16f, Color.WHITE, bold = true), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(text(getString(R.string.scores_remove), 14f, Accent.RED, bold = true).apply {
+                setPadding(dp(12), dp(4), 0, dp(4))
+                setOnClickListener {
+                    Prefs.setFollowedTeams(Prefs.followedTeams().filter { it.id != team.id })
+                    renderTeams(); ScoreWatcher.refreshNow()
+                }
+            })
+            teamsBox.addView(row)
+        }
     }
 
     private fun section(title: String) {

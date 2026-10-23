@@ -72,6 +72,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
     /** item (key@update) that already had its "Siri moment", so it is not replayed */
     private var momentToken: String? = null
     private val finishMoment = Runnable { render() }
+    private var goalToken: String? = null
 
     private var mode = Mode.HIDDEN
     private var shownItem: IslandItem? = null
@@ -141,6 +142,13 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         val item = if (suppressed) null else IslandHub.primary()
         val secondary = if (suppressed) null else IslandHub.secondary()
         if (expandedKey != null && item?.key != expandedKey) expandedKey = null
+        if (item != null && item.score?.scoreChanged == true && goalToken != item.key + "@" + item.updatedAt) {
+            goalToken = item.key + "@" + item.updatedAt
+            expandedKey = item.key
+            removeCallbacks(autoCollapse)
+            postDelayed(autoCollapse, 7000)
+            haptic(HapticFeedbackConstants.CONFIRM)
+        }
         val newMode = when {
             item == null -> Mode.HIDDEN
             item.kind == Kind.NOTIFICATION || item.kind == Kind.TEST || item.incomingCall || item.key == expandedKey -> Mode.EXPANDED
@@ -358,6 +366,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
 
     private fun bindCompact(item: IslandItem) {
         compactRow.removeAllViews()
+        if (item.score != null) { bindCompactScore(item.score); return }
         val h = compactHeight()
         val iconSize = (h * 0.62f).roundToInt()
 
@@ -395,6 +404,54 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         compactRow.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT))
     }
 
+    /** badge + score on each side of the camera */
+    private fun bindCompactScore(score: ScoreInfo) {
+        val h = compactHeight()
+        val badge = (h * 0.62f).roundToInt()
+        val left = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL or Gravity.START; setPadding(dp(4), 0, 0, 0) }
+        left.addView(BadgeView(context, score.home), LinearLayout.LayoutParams(badge, badge))
+        left.addView(text(score.home.score, 17f, Color.WHITE, bold = true).apply { setPadding(dp(8), 0, 0, 0); fontFeatureSettings = "tnum" })
+        val right = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL or Gravity.END; setPadding(0, 0, dp(4), 0) }
+        right.addView(text(score.away.score, 17f, Color.WHITE, bold = true).apply { setPadding(0, 0, dp(8), 0); fontFeatureSettings = "tnum" })
+        right.addView(BadgeView(context, score.away), LinearLayout.LayoutParams(badge, badge))
+        compactRow.setPadding(dp(8), 0, dp(8), compactLip())
+        compactRow.addView(left, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT))
+        compactRow.addView(View(context), LinearLayout.LayoutParams(cameraGap(), 1))
+        compactRow.addView(right, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT))
+    }
+
+    /** big scoreboard: badges and names on the sides, score and minute in the middle, last goal below */
+    private fun bindExpandedScore(item: IslandItem, score: ScoreInfo) {
+        val row = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        fun side(team: TeamSide) = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
+            addView(BadgeView(context, team), LinearLayout.LayoutParams(dp(52), dp(52)))
+            addView(text(team.name, 13f, Color.WHITE, bold = true).apply { gravity = Gravity.CENTER; setPadding(0, dp(6), 0, 0) },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        val middle = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL
+            addView(text("${score.home.score}  -  ${score.away.score}", 34f, Color.WHITE, bold = true).apply { fontFeatureSettings = "tnum" })
+            val statusColor = if (score.live) Accent.GREEN else 0xFFA1A1A6.toInt()
+            addView(text((if (score.live) "● " else "") + score.status + (if (score.live) "  Ao vivo" else ""), 13f, statusColor, bold = true)
+                .apply { setPadding(0, dp(4), 0, 0) })
+        }
+        row.addView(side(score.home), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        row.addView(middle, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.3f))
+        row.addView(side(score.away), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        expandedPanel.addView(row)
+        val info = listOfNotNull(score.lastEvent, score.league.takeIf { it.isNotEmpty() && score.lastEvent == null }).firstOrNull()
+        if (info != null) expandedPanel.addView(text(info, 13f, 0xFFA1A1A6.toInt()).apply { gravity = Gravity.CENTER },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
+        score.minuteFraction?.let { f ->
+            val color = if (score.live) Accent.GREEN else 0xFF8E8E93.toInt()
+            if (isFluid()) expandedPanel.addView(ChasingProgressView(context).apply { this.color = color; progress = f },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(12)).apply { topMargin = dp(10) })
+            else expandedPanel.addView(progressBar(color).apply { max = 1000; progress = (f * 1000).roundToInt() },
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)).apply { topMargin = dp(14) })
+        }
+    }
+
     private fun bindBubble(secondary: IslandItem?, size: Int) {
         if (secondary == null) { bubble.visibility = GONE; return }
         bubble.visibility = VISIBLE
@@ -414,6 +471,7 @@ class IslandView(context: Context, private val host: Host) : FrameLayout(context
         expandedPanel.removeAllViews()
         mediaProgress = null; mediaElapsed = null; mediaRemaining = null; mediaChase = null
         expandedPanel.setPadding(dp(16), dp(14), dp(16), dp(14) + expandedLip())
+        if (item.score != null) { bindExpandedScore(item, item.score); return }
 
         val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val iconSize = dp(46)

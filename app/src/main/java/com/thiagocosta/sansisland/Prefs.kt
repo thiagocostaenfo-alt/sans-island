@@ -30,6 +30,18 @@ object Prefs {
         prefs.edit().putString("style", "fluid").putBoolean("fluid_migrated", true).putBoolean("glass_migrated", true).apply()
     }
 
+    /** followed teams as "id|name;id|name" (ESPN team ids) */
+    fun followedTeams(): List<FollowedTeam> {
+        val raw = prefs.getString("teams", "2029|Palmeiras;15424|Paysandu") ?: ""
+        return raw.split(";").mapNotNull { e ->
+            val id = e.substringBefore("|", "").trim(); val name = e.substringAfter("|", "").trim()
+            if (id.isEmpty() || name.isEmpty()) null else FollowedTeam(id, name)
+        }
+    }
+
+    fun setFollowedTeams(teams: List<FollowedTeam>) =
+        prefs.edit().putString("teams", teams.joinToString(";") { "${it.id}|${it.name.replace(";", " ").replace("|", " ")}" }).apply()
+
     fun addChangeListener(l: () -> Unit) { changeListeners += l }
     fun removeChangeListener(l: () -> Unit) { changeListeners -= l }
 

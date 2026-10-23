@@ -67,6 +67,7 @@ class IslandNotificationListener : NotificationListenerService() {
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         IslandHub.remove(sbn.key)
         lastAlertWhen.remove(sbn.key)
+        ScoreWatcher.removeNotificationScore(sbn.key)
     }
 
     // ---------------------------------------------------------------- notifications
@@ -77,6 +78,13 @@ class IslandNotificationListener : NotificationListenerService() {
         if ((n.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
         val extras = n.extras
         if (extras.containsKey(Notification.EXTRA_MEDIA_SESSION)) return // handled by media sessions
+        run {
+            // live scores from sports apps (ge, SofaScore...), for games ESPN does not cover
+            val t = (extras.getCharSequence(Notification.EXTRA_TITLE))?.toString().orEmpty()
+            val x = (extras.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
+            val ongoingScore = (n.flags and Notification.FLAG_ONGOING_EVENT) != 0
+            if (ScoreWatcher.fromNotification(sbn.key, sbn.packageName, t, x, ongoingScore, openAction(sbn))) return
+        }
 
         val title = (extras.getCharSequence(Notification.EXTRA_TITLE)
             ?: extras.getCharSequence(Notification.EXTRA_TITLE_BIG))?.toString()?.trim().orEmpty()

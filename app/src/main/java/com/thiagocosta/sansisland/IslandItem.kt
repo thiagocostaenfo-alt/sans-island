@@ -10,6 +10,7 @@ enum class Kind(val priority: Int, val ongoing: Boolean) {
     TIMER(80, true),
     RECORDING(75, true),
     MEDIA(60, true),
+    SCORE(70, true),
     LIVE(50, true),
     NOTIFICATION(90, false),
     CHARGING(85, false),
@@ -35,6 +36,30 @@ class MediaInfo(
     val positionAt: Long,
     val speed: Float,
     val durationMs: Long,
+)
+
+/** one side of a game shown in the island */
+class TeamSide(
+    val abbr: String,
+    val name: String,
+    val color: Int,
+    val altColor: Int,
+    val score: String,
+)
+
+class ScoreInfo(
+    val home: TeamSide,
+    val away: TeamSide,
+    /** "67'", "Intervalo", "Encerrado", "Hoje 21:30" */
+    val status: String,
+    val live: Boolean,
+    /** share of the 90 minutes played, for the progress bar */
+    val minuteFraction: Float?,
+    /** "Gol de Pedro (PAL) 64'" */
+    val lastEvent: String?,
+    /** a goal was just scored: the island opens for a few seconds */
+    val scoreChanged: Boolean,
+    val league: String,
 )
 
 class IslandItem(
@@ -64,5 +89,6 @@ class IslandItem(
     val durationMs: Long = 0,
     val media: MediaInfo? = null,
     val incomingCall: Boolean = false,
+    val score: ScoreInfo? = null,
     val updatedAt: Long = System.currentTimeMillis(),
 )

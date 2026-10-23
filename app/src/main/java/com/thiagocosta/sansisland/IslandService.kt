@@ -69,6 +69,7 @@ class IslandService : AccessibilityService(), IslandView.Host {
         IslandHub.addListener(hubListener)
         Prefs.addChangeListener(prefsListener)
         registerStatusWatchers()
+        ScoreWatcher.start(this)
         updateSuppression()
         view.render(animate = false)
     }
@@ -78,6 +79,7 @@ class IslandService : AccessibilityService(), IslandView.Host {
         IslandHub.removeListener(hubListener)
         Prefs.removeChangeListener(prefsListener)
         unregisterStatusWatchers()
+        ScoreWatcher.stop()
         island?.let { try { wm.removeView(it) } catch (_: Exception) { } }
         island = null
         super.onDestroy()

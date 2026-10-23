@@ -9,6 +9,7 @@ Ilha dinâmica (estilo iPhone) para Android, desenhada em volta da câmera front
 - **Timer, cronômetro e alarme**: contagem ao vivo
 - **Atividades ao vivo**: entregas, downloads, rotas e as Live Updates do Android 16, com barra de progresso
 - **Gravação de tela**, **carregamento** (com %), **fones conectados**, **modo silencioso/vibrar**
+- **Placar ao vivo** dos times que você segue (padrão: Palmeiras e Paysandu): escudos com as cores dos times e placar na cápsula; no cartão, placar grande, minuto, último gol e barra do tempo de jogo. Num gol a ilha abre sozinha por alguns segundos. Dados do serviço público da ESPN; jogos sem cobertura (ex.: Campeonato Paraense) vêm das notificações de apps de placar.
 - Duas atividades ao mesmo tempo: a segunda aparece numa bolinha ao lado
 
 Visual "Nuvem Fluida" (padrão, como no ColorOS): cápsula preta e sólida em volta da câmera que se abre num cartão de vidro escuro translúcido com contorno claro; brilho suave onde o dedo toca, onda de luz ao pausar ou trocar de música e barra de progresso com luz que corre. Mensagens não aparecem na ilha, só atividades ao vivo.
@@ -36,4 +37,4 @@ Cada envio para a branch `main` gera um APK novo pelo GitHub Actions.
 
 ## Privacidade
 
-Tudo roda no celular. O app não tem permissão de internet.
+Tudo roda no celular. A internet é usada só para buscar os placares dos times seguidos; notificações e música nunca saem do aparelho.
