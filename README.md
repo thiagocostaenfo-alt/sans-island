@@ -20,7 +20,7 @@ A cor de destaque vem do app de origem (ícone do app ou capa do álbum), como n
 
 ## Widgets do Google
 
-Dois widgets de barra de pesquisa: *Google · vidro esfumaçado* e *Google · vidro dos ícones*. Segure a tela inicial → Widgets → Sans Island. Pesquisar, voz e câmera (Lens).
+Dois widgets de pesquisa do tamanho do botão "Buscar" da tela inicial do iPhone: *Google · vidro esfumaçado* e *Google · vidro dos ícones*. Segure a tela inicial → Widgets → Sans Island.
 
 ## Gestos
 

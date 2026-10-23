@@ -36,8 +36,6 @@ abstract class SearchWidget(private val style: Style) : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, layout)
         googleIconBitmap(context)?.let { views.setImageViewBitmap(R.id.widget_g, it) }
         views.setOnClickPendingIntent(R.id.widget_search, action(context, SearchLauncher.SEARCH, 1))
-        views.setOnClickPendingIntent(R.id.widget_mic, action(context, SearchLauncher.VOICE, 2))
-        views.setOnClickPendingIntent(R.id.widget_lens, action(context, SearchLauncher.LENS, 3))
         manager.updateAppWidget(id, views)
     }
 
@@ -51,7 +49,7 @@ abstract class SearchWidget(private val style: Style) : AppWidgetProvider() {
     /** the Google app's own "G", square, without the white circle of its launcher icon */
     private fun googleIconBitmap(context: Context): Bitmap? = try {
         val icon = context.packageManager.getApplicationIcon(GOOGLE_PKG)
-        val size = (22 * context.resources.displayMetrics.density * 2).roundToInt() // 2x for crisp scaling
+        val size = (16 * context.resources.displayMetrics.density * 2).roundToInt() // 2x for crisp scaling
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         if (icon is AdaptiveIconDrawable) {
